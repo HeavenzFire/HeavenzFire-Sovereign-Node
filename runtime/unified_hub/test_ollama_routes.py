@@ -49,13 +49,29 @@ class OllamaHubRouteTests(unittest.TestCase):
         self.assertEqual(body["evidence"], "live /api/tags probe")
 
     def test_unavailable_provider_is_not_reported_connected(self):
-        fake = unittest.mock.Mock()
+        fake = Mock()
         fake.health.side_effect = server.OllamaError("Ollama request failed (ConnectionRefusedError)")
         with patch.object(server, "OllamaAdapter", return_value=fake):
             status, body = self.request("/v1/uim/ollama/health")
         self.assertEqual(status, 503)
         self.assertEqual(body["status"], "unavailable")
         self.assertEqual(body["models"], [])
+
+
+    def test_openai_chat_route_keeps_model_output_inert(self):
+        fake = Mock()
+        fake.chat.return_value = {
+            "provider": "openai", "model": "example-model",
+            "content": "GPT worker ready", "response_id": "resp_test",
+        }
+        with patch.object(server, "OpenAIAdapter", return_value=fake):
+            status, body = self.request("/v1/uim/openai/chat", {
+                "messages": [{"role": "user", "content": "Say ready"}],
+            })
+        self.assertEqual(status, 200)
+        self.assertEqual(body["content"], "GPT worker ready")
+        self.assertFalse(body["execution_enabled"])
+        fake.chat.assert_called_once_with([{"role": "user", "content": "Say ready"}])
 
     def test_chat_returns_text_without_enabling_execution(self):
         fake = unittest.mock.Mock()

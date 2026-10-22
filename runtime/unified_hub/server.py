@@ -22,6 +22,7 @@ UIM_ROOT = ROOT.parent / "uim"
 if str(UIM_ROOT) not in __import__("sys").path:
     __import__("sys").path.insert(0, str(UIM_ROOT))
 from ollama_adapter import OllamaAdapter, OllamaError
+from openai_adapter import OpenAIAdapter, OpenAIAdapterError
 
 DB_PATH = Path(os.environ.get("HF_HUB_DB", str(ROOT / "hub.sqlite3")))
 HOST = os.environ.get("HF_HUB_HOST", "127.0.0.1")
@@ -127,6 +128,15 @@ class Handler(BaseHTTPRequestHandler):
             })
         if not self.authorized():
             return self.send_json(401, {"error": "unauthorized"})
+        if parsed.path == "/v1/uim/openai/status":
+            configured = bool(os.environ.get("OPENAI_API_KEY", "").strip()
+                              and os.environ.get("HF_OPENAI_MODEL", "").strip())
+            return self.send_json(200, {
+                "capability": "uim.openai", "status": "configured_not_probed" if configured else "unconfigured",
+                "provider": "openai", "model": os.environ.get("HF_OPENAI_MODEL", "") if configured else None,
+                "credential_source": "OPENAI_API_KEY environment variable",
+                "evidence": "local environment configuration only; no API request made",
+            })
         if parsed.path == "/v1/uim/ollama/health":
             try:
                 result = OllamaAdapter().health()
@@ -180,6 +190,21 @@ class Handler(BaseHTTPRequestHandler):
         except ValueError as exc:
             return self.send_json(400, {"error": str(exc)})
         path = urlparse(self.path).path
+        if path == "/v1/uim/openai/chat":
+            messages = body.get("messages")
+            try:
+                result = OpenAIAdapter().chat(messages)
+            except OpenAIAdapterError as exc:
+                return self.send_json(502, {
+                    "capability": "uim.openai", "status": "request_failed",
+                    "error": str(exc), "execution_enabled": False,
+                })
+            return self.send_json(200, {
+                "capability": "uim.openai", "status": "response_received",
+                "provider": result["provider"], "model": result["model"],
+                "content": result["content"], "response_id": result["response_id"],
+                "execution_enabled": False,
+            })
         if path == "/v1/uim/ollama/chat":
             model, messages = body.get("model"), body.get("messages")
             try:

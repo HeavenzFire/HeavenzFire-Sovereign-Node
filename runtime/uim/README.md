@@ -23,6 +23,32 @@ Likewise, GitHub, browser, and desktop integrations available in a ChatGPT sessi
 
 The Ollama adapter is implemented but not confirmed connected to a live Ollama service. Unit tests use mocked HTTP responses; they do not prove model quality or live local connectivity.
 
+## Unified Hub Ollama endpoints
+
+The local Unified Hub now exposes the bounded Ollama adapter through these loopback-only API routes. Requests must pass the hub's authorization check; when `HF_HUB_TOKEN` is set, send `Authorization: Bearer <token>`.
+
+- `GET /v1/uim/ollama/health`: performs a live `/api/tags` probe and returns `connected` with a model inventory only when the probe succeeds. A failed probe returns HTTP 503 and `unavailable`.
+- `POST /v1/uim/ollama/chat`: accepts JSON with `model` and `messages`, applies adapter validation and timeout limits, and returns response text. It never executes model output or tool calls.
+- `GET /v1/connectors`: lists Ollama as `probe_required`; this static connector listing is not evidence of a live connection.
+
+Example PowerShell 5.1 probe after starting the hub:
+
+```powershell
+Invoke-RestMethod -Method Get -Uri "http://127.0.0.1:8765/v1/uim/ollama/health"
+```
+
+Example chat request:
+
+```powershell
+$body = @{
+    model = "llama3.2:1b"
+    messages = @(@{ role = "user"; content = "Reply with READY" })
+} | ConvertTo-Json -Depth 5
+Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8765/v1/uim/ollama/chat" -ContentType "application/json" -Body $body
+```
+
+Use a model name returned by the health probe. These routes do not enable task execution; `/health` continues to report `execution_enabled: false`. Route tests mock the Ollama provider, so a successful CI run verifies the API contract, not connectivity to your local machine.
+
 ## Capability status vocabulary
 
 - `planned`: design only.

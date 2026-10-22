@@ -67,6 +67,26 @@ class OllamaAdapterTests(unittest.TestCase):
         with self.assertRaises(OllamaError):
             adapter.chat("model", [{"role": "user", "content": "x" * 32001}])
 
+    @patch("ollama_adapter.urllib.request.urlopen", side_effect=TimeoutError("simulated timeout"))
+    def test_health_timeout_is_sanitized(self, urlopen):
+        with self.assertRaisesRegex(OllamaError, "request failed"):
+            OllamaAdapter(timeout=0.1).health()
+
+    @patch("ollama_adapter.urllib.request.urlopen")
+    def test_malformed_json_response_rejected(self, urlopen):
+        response = FakeResponse({})
+        response.raw = b"not-json"
+        urlopen.return_value = response
+        with self.assertRaisesRegex(OllamaError, "invalid JSON"):
+            OllamaAdapter().health()
+
+    def test_invalid_model_and_empty_messages_rejected(self):
+        adapter = OllamaAdapter()
+        with self.assertRaises(OllamaError):
+            adapter.chat("", [{"role": "user", "content": "hello"}])
+        with self.assertRaises(OllamaError):
+            adapter.chat("llama3.2:1b", [])
+
     def test_invalid_timeout_rejected(self):
         with self.assertRaises(OllamaError):
             OllamaAdapter(timeout=0)

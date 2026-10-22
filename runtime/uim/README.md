@@ -49,6 +49,40 @@ Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8765/v1/uim/ollama/chat" -
 
 Use a model name returned by the health probe. These routes do not enable task execution; `/health` continues to report `execution_enabled: false`. Route tests mock the Ollama provider, so a successful CI run verifies the API contract, not connectivity to your local machine.
 
+## Hosted GPT / OpenAI API worker
+
+The optional hosted GPT worker uses the OpenAI Responses API from the local Unified Hub. It is a separate API worker and **does not connect to or clone the current ChatGPT conversation**.
+
+Configure these environment variables in the process that launches the hub; never commit keys to GitHub:
+
+- `OPENAI_API_KEY`: an API key authorized for the account/project.
+- `HF_OPENAI_MODEL`: a model identifier available to that API key.
+
+PowerShell 5.1 example for the current terminal only:
+
+```powershell
+$env:OPENAI_API_KEY = Read-Host "Enter OpenAI API key"
+$env:HF_OPENAI_MODEL = Read-Host "Enter an API model identifier"
+python .\runtime\unified_hub\server.py
+```
+
+The key is held in the process environment, not the repository. Avoid putting it directly in command history or sharing terminal output.
+
+- `GET /v1/uim/openai/status` reports `configured_not_probed` when both variables exist. This is a local configuration check, not proof of network or account access.
+- `POST /v1/uim/openai/chat` makes a real API request and returns text only.
+- `GET /v1/connectors` lists the worker as `not_configured` or `configured_not_probed`; it never claims live connectivity based only on configuration.
+
+Example request:
+
+```powershell
+$body = @{
+    messages = @(@{ role = "user"; content = "Reply with GPT_WORKER_READY" })
+} | ConvertTo-Json -Depth 5
+Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8765/v1/uim/openai/chat" -ContentType "application/json" -Body $body
+```
+
+Hosted requests may incur API charges and transmit submitted message content to OpenAI. Do not send private data unless the applicable data-handling policy permits it. API calls are separate from ChatGPT subscription access. Model output is returned as text and is never executed as a command by these routes. Task execution remains disabled.
+
 ## Capability status vocabulary
 
 - `planned`: design only.

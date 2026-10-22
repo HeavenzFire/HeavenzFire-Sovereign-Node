@@ -1,15 +1,17 @@
-name: UIM Contract Tests
+name: UIM and Control Relay Contract Tests
 
 on:
   push:
     paths:
       - "runtime/uim/**"
       - "runtime/unified_hub/**"
+      - "runtime/control_relay/**"
       - ".github/workflows/uim-registry-tests.yml"
   pull_request:
     paths:
       - "runtime/uim/**"
       - "runtime/unified_hub/**"
+      - "runtime/control_relay/**"
       - ".github/workflows/uim-registry-tests.yml"
   workflow_dispatch:
 
@@ -17,7 +19,7 @@ permissions:
   contents: read
 
 jobs:
-  uim-tests:
+  contract-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -27,7 +29,9 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Run all UIM contract tests
-        run: |
-          python -m unittest discover -s runtime/uim -v
-          python -m unittest discover -s runtime/unified_hub -v
+      - name: Run UIM adapter and registry tests
+        run: python -m unittest discover -s runtime/uim -v
+      - name: Run Unified Hub route tests
+        run: python -m unittest discover -s runtime/unified_hub -v
+      - name: Run relay safety contract tests
+        run: python -m unittest discover -s runtime/control_relay -v

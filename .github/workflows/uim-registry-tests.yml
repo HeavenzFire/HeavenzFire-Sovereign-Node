@@ -1,0 +1,30 @@
+name: UIM Registry Tests
+
+on:
+  push:
+    paths:
+      - "runtime/uim/**"
+      - ".github/workflows/uim-registry-tests.yml"
+  pull_request:
+    paths:
+      - "runtime/uim/**"
+      - ".github/workflows/uim-registry-tests.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  registry-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run UIM registry contract tests
+        working-directory: runtime/uim
+        run: python -m unittest test_registry -v

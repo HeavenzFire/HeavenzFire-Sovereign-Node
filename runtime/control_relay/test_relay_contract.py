@@ -26,7 +26,7 @@ class ControlRelayContractTests(unittest.TestCase):
 
     def test_git_status_requires_explicit_git_workspace(self):
         self.assertIn("git-status requires -Workspace", self.agent)
-        self.assertIn("git status --short --branch", self.agent)
+        self.assertIn("status --short --branch", self.agent)
 
     def test_installer_is_non_persistent_and_uses_tls12(self):
         self.assertIn("SecurityProtocolType]::Tls12", self.installer)

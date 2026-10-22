@@ -52,14 +52,15 @@
     {
       "id": "uim.ollama",
       "kind": "model_adapter",
-      "status": "planned",
+      "status": "implemented",
       "requires": [
         "local Ollama endpoint",
         "health check",
         "model inventory",
         "contract tests"
       ],
-      "description": "Local model adapter; runtime connection must be probed on the target machine before status is promoted."
+      "description": "Loopback-only Ollama adapter exposed through authenticated/loopback Unified Hub routes; live connectivity remains probe-dependent.",
+      "evidence": "runtime/uim/ollama_adapter.py; runtime/unified_hub/server.py routes /v1/uim/ollama/health and /v1/uim/ollama/chat"
     },
     {
       "id": "uim.github",
@@ -99,28 +100,42 @@
       "id": "uim.research",
       "kind": "capability",
       "status": "planned",
-      "requires": ["search adapter", "source provenance", "citation verification"],
+      "requires": [
+        "search adapter",
+        "source provenance",
+        "citation verification"
+      ],
       "description": "Evidence-backed research and retrieval."
     },
     {
       "id": "uim.multimodal",
       "kind": "capability",
       "status": "planned",
-      "requires": ["one or more configured vision/audio/media adapters"],
+      "requires": [
+        "one or more configured vision/audio/media adapters"
+      ],
       "description": "Pluggable image, document, audio, and media workflows."
     },
     {
       "id": "uim.approval_broker",
       "kind": "security",
       "status": "planned",
-      "requires": ["identity context", "policy rules", "durable approval records"],
+      "requires": [
+        "identity context",
+        "policy rules",
+        "durable approval records"
+      ],
       "description": "Require explicit approvals for external side effects, destructive actions, credential use, publishing, purchases, and privilege changes."
     },
     {
       "id": "uim.evidence_ledger",
       "kind": "observability",
       "status": "planned",
-      "requires": ["durable event store", "redaction", "verification hooks"],
+      "requires": [
+        "durable event store",
+        "redaction",
+        "verification hooks"
+      ],
       "description": "Record task state, selected route, tool invocations, approvals, hashes, and verification outcomes."
     }
   ]

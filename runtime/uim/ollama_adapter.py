@@ -48,10 +48,14 @@ def _validate_base_url(base_url: str) -> str:
     path = parsed.path.rstrip("/")
     if path:
         raise OllamaError("Ollama base URL must not contain a path")
-    port = parsed.port
+    try:
+        port = parsed.port
+    except ValueError:
+        raise OllamaError("Invalid port") from None
     if port is not None and not (1 <= port <= 65535):
         raise OllamaError("Invalid port")
-    return f"http://{hostname}" + (f":{port}" if port else "")
+    authority_host = f"[{hostname}]" if ":" in hostname else hostname
+    return f"http://{authority_host}" + (f":{port}" if port else "")
 
 
 class OllamaAdapter:

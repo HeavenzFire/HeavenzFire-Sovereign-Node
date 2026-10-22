@@ -22,11 +22,16 @@ class OllamaAdapterTests(unittest.TestCase):
     def test_loopback_urls_accepted(self):
         self.assertEqual(_validate_base_url("http://127.0.0.1:11434"), "http://127.0.0.1:11434")
         self.assertEqual(_validate_base_url("http://localhost:11434"), "http://localhost:11434")
+        self.assertEqual(_validate_base_url("http://[::1]:11434"), "http://[::1]:11434")
 
     def test_non_loopback_rejected(self):
         for url in ("http://example.com:11434", "https://127.0.0.1:11434", "http://192.168.1.5:11434"):
             with self.subTest(url=url), self.assertRaises(OllamaError):
                 _validate_base_url(url)
+
+    def test_malformed_port_rejected(self):
+        with self.assertRaises(OllamaError):
+            _validate_base_url("http://127.0.0.1:notaport")
 
     def test_credentials_and_path_rejected(self):
         for url in ("http://user:pass@127.0.0.1:11434", "http://127.0.0.1:11434/api"):

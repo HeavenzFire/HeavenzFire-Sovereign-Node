@@ -83,7 +83,7 @@ def route_candidates(
     *,
     path: Path = REGISTRY_PATH,
 ) -> list[dict[str, Any]]:
-    """Return only registered, implemented/tested/verified candidates.
+    """Return only registered, tested/verified candidates; implementation alone is not routable.
 
     The initial seed contains declarations rather than executable model adapters,
     so this function intentionally returns no candidate for unimplemented IDs.
@@ -96,7 +96,7 @@ def route_candidates(
     by_id = {item["id"]: item for item in items}
     if not required_capabilities.issubset(by_id):
         return []
-    eligible = {"implemented", "tested", "verified"}
+    eligible = {"tested", "verified"}
     candidates = [by_id[item_id] for item_id in sorted(required_capabilities)]
     if any(item.get("status") not in eligible for item in candidates):
         return []

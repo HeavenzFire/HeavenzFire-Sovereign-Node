@@ -40,14 +40,15 @@
     {
       "id": "uim.chatgpt.api_adapter",
       "kind": "model_adapter",
-      "status": "planned",
+      "status": "implemented",
       "requires": [
         "user-provided or approved API credentials",
         "configured endpoint",
         "budget and data-handling policy",
         "contract tests"
       ],
-      "description": "Optional API adapter for a supported model endpoint. It is not a proxy to this exact ChatGPT conversation."
+      "description": "Optional hosted OpenAI API worker. Requires OPENAI_API_KEY and HF_OPENAI_MODEL; not a proxy to the current ChatGPT session.",
+      "evidence": "runtime/uim/openai_adapter.py; runtime/uim/test_openai_adapter.py; runtime/unified_hub/server.py routes /v1/uim/openai/status and /v1/uim/openai/chat"
     },
     {
       "id": "uim.ollama",

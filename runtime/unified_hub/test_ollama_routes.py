@@ -7,7 +7,7 @@ from http.server import ThreadingHTTPServer
 from pathlib import Path
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import server
 
@@ -39,7 +39,7 @@ class OllamaHubRouteTests(unittest.TestCase):
             return exc.code, json.loads(exc.read().decode("utf-8"))
 
     def test_health_route_reports_live_probe_evidence(self):
-        fake = unittest.mock.Mock()
+        fake = Mock()
         fake.health.return_value = {"provider": "ollama", "connected": True, "models": ["llama3.2:1b"]}
         with patch.object(server, "OllamaAdapter", return_value=fake):
             status, body = self.request("/v1/uim/ollama/health")

@@ -154,6 +154,16 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == "/v1/connectors":
             connectors = [dict(item) for item in CONNECTORS]
             connectors.append({
+                "id": "openai",
+                "state": "configured_not_probed" if (
+                    os.environ.get("OPENAI_API_KEY", "").strip()
+                    and os.environ.get("HF_OPENAI_MODEL", "").strip()
+                ) else "not_configured",
+                "capabilities": ["model_chat"],
+                "status_endpoint": "/v1/uim/openai/status",
+                "chat_endpoint": "/v1/uim/openai/chat",
+            })
+            connectors.append({
                 "id": "ollama", "state": "probe_required",
                 "capabilities": ["model_inventory", "model_chat"],
                 "health_endpoint": "/v1/uim/ollama/health",

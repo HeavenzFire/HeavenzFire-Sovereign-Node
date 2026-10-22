@@ -9,6 +9,7 @@ on:
   pull_request:
     paths:
       - "runtime/uim/**"
+      - "runtime/unified_hub/**"
       - ".github/workflows/uim-registry-tests.yml"
   workflow_dispatch:
 

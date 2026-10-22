@@ -18,6 +18,11 @@ from pathlib import Path
 from urllib.parse import urlparse, parse_qs
 
 ROOT = Path(__file__).resolve().parent
+UIM_ROOT = ROOT.parent / "uim"
+if str(UIM_ROOT) not in __import__("sys").path:
+    __import__("sys").path.insert(0, str(UIM_ROOT))
+from ollama_adapter import OllamaAdapter, OllamaError
+
 DB_PATH = Path(os.environ.get("HF_HUB_DB", str(ROOT / "hub.sqlite3")))
 HOST = os.environ.get("HF_HUB_HOST", "127.0.0.1")
 PORT = int(os.environ.get("HF_HUB_PORT", "8765"))
@@ -122,8 +127,28 @@ class Handler(BaseHTTPRequestHandler):
             })
         if not self.authorized():
             return self.send_json(401, {"error": "unauthorized"})
+        if parsed.path == "/v1/uim/ollama/health":
+            try:
+                result = OllamaAdapter().health()
+                return self.send_json(200, {
+                    "capability": "uim.ollama", "status": "connected",
+                    "checked_at": now(), "provider": "ollama", "models": result["models"],
+                    "evidence": "live /api/tags probe",
+                })
+            except OllamaError as exc:
+                return self.send_json(503, {
+                    "capability": "uim.ollama", "status": "unavailable",
+                    "checked_at": now(), "provider": "ollama", "models": [],
+                    "error": str(exc),
+                })
         if parsed.path == "/v1/connectors":
-            return self.send_json(200, {"connectors": CONNECTORS})
+            connectors = [dict(item) for item in CONNECTORS]
+            connectors.append({
+                "id": "ollama", "state": "probe_required",
+                "capabilities": ["model_inventory", "model_chat"],
+                "health_endpoint": "/v1/uim/ollama/health",
+            })
+            return self.send_json(200, {"connectors": connectors})
         if parsed.path == "/v1/tasks":
             with db() as con:
                 rows = con.execute("SELECT * FROM tasks ORDER BY created_at DESC LIMIT 100").fetchall()
@@ -155,6 +180,22 @@ class Handler(BaseHTTPRequestHandler):
         except ValueError as exc:
             return self.send_json(400, {"error": str(exc)})
         path = urlparse(self.path).path
+        if path == "/v1/uim/ollama/chat":
+            model, messages = body.get("model"), body.get("messages")
+            try:
+                result = OllamaAdapter().chat(model, messages)
+            except OllamaError as exc:
+                # Keep model output inert: this endpoint returns text only and never executes tools.
+                return self.send_json(502, {
+                    "capability": "uim.ollama", "status": "request_failed",
+                    "error": str(exc), "execution_enabled": False,
+                })
+            return self.send_json(200, {
+                "capability": "uim.ollama", "status": "response_received",
+                "provider": result["provider"], "model": result["model"],
+                "content": result["content"], "done": result["done"],
+                "execution_enabled": False,
+            })
         if path == "/v1/tasks":
             prompt = body.get("prompt")
             connector = body.get("connector", "mock")

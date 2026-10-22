@@ -1,0 +1,130 @@
+openapi: 3.1.0
+info:
+  title: HeavenzFire Unified Hub API
+  version: 0.1.0
+  description: Local-first automation task ledger. Initial implementation persists tasks but does not execute them.
+servers:
+  - url: http://127.0.0.1:8765
+    description: Local development only
+security:
+  - bearerAuth: []
+paths:
+  /health:
+    get:
+      security: []
+      summary: Read local service health
+      responses:
+        '200':
+          description: Service health and whether execution is enabled
+  /v1/connectors:
+    get:
+      summary: List connectors and declared capabilities
+      responses:
+        '200':
+          description: Connector metadata
+  /v1/tasks:
+    get:
+      summary: List recent tasks
+      responses:
+        '200':
+          description: Recent task records
+    post:
+      summary: Persist a new task request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [prompt]
+              properties:
+                prompt:
+                  type: string
+                  minLength: 1
+                  maxLength: 12000
+                connector:
+                  type: string
+                  enum: [mock, github, powershell, gemini, browser]
+                  default: mock
+      responses:
+        '201':
+          description: Task persisted as queued; not executed
+        '400':
+          description: Invalid request
+        '409':
+          description: Connector is not configured
+  /v1/tasks/{id}:
+    get:
+      summary: Inspect a task and its event history
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Task details
+        '404':
+          description: Task not found
+  /v1/tasks/{id}/resume:
+    post:
+      summary: Request resume from the last stored checkpoint
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Resume request persisted; execution is not enabled
+        '409':
+          description: Task is not resumable
+  /v1/tasks/{id}/cancel:
+    post:
+      summary: Record explicit task cancellation
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Cancellation event recorded
+        '409':
+          description: Task is already terminal
+  /v1/events:
+    get:
+      summary: Read a task event timeline
+      parameters:
+        - in: query
+          name: task_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Ordered task events
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer

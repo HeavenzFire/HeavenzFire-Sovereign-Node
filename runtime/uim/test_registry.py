@@ -27,9 +27,9 @@ class RegistryTests(unittest.TestCase):
         self.assertEqual(route_candidates({"not.registered"}), [])
 
     def test_filter_by_kind_and_status(self):
-        items = list_capabilities(kind="model_adapter", statuses={"planned"})
+        items = list_capabilities(kind="model_adapter", statuses={"implemented"})
         self.assertTrue(items)
-        self.assertTrue(all(item["status"] == "planned" for item in items))
+        self.assertTrue(all(item["status"] == "implemented" for item in items))
 
     def test_duplicate_ids_rejected(self):
         data = {

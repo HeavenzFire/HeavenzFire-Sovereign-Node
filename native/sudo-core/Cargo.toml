@@ -1,0 +1,10 @@
+[package]
+name = "sudo-core-policy"
+version = "0.1.0"
+edition = "2021"
+description = "SUDO-CORE native default-deny policy evaluator for HeavenzFire"
+license = "MIT"
+
+[[bin]]
+name = "sudo-core-policy"
+path = "src/main.rs"

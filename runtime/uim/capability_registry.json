@@ -1,0 +1,127 @@
+{
+  "schema_version": "1.0.0",
+  "project": "HeavenzFire Unified Intelligence Model",
+  "generated_as": "repository_seed_not_live_discovery",
+  "status_vocabulary": [
+    "planned",
+    "implemented",
+    "tested",
+    "configured",
+    "connected",
+    "authorized",
+    "verified",
+    "blocked",
+    "unavailable"
+  ],
+  "principles": {
+    "local_first": true,
+    "provider_neutral": true,
+    "deny_unregistered_tools": true,
+    "approval_required_for_side_effects": true,
+    "never_infer_connection_from_manifest": true,
+    "never_infer_execution_from_task_creation": true
+  },
+  "capabilities": [
+    {
+      "id": "uim.registry",
+      "kind": "core",
+      "status": "implemented",
+      "evidence": "runtime/uim/registry.py",
+      "description": "Load, validate, and filter declared capability records."
+    },
+    {
+      "id": "uim.chatgpt.current_session",
+      "kind": "assistant_session",
+      "status": "connected",
+      "scope": "current_chat_session_only",
+      "evidence": "This conversation's tool surface",
+      "description": "The current assistant can invoke only tools exposed to this session and permitted by their policies. This does not expose the underlying assistant session as a local HTTP API."
+    },
+    {
+      "id": "uim.chatgpt.api_adapter",
+      "kind": "model_adapter",
+      "status": "planned",
+      "requires": [
+        "user-provided or approved API credentials",
+        "configured endpoint",
+        "budget and data-handling policy",
+        "contract tests"
+      ],
+      "description": "Optional API adapter for a supported model endpoint. It is not a proxy to this exact ChatGPT conversation."
+    },
+    {
+      "id": "uim.ollama",
+      "kind": "model_adapter",
+      "status": "planned",
+      "requires": [
+        "local Ollama endpoint",
+        "health check",
+        "model inventory",
+        "contract tests"
+      ],
+      "description": "Local model adapter; runtime connection must be probed on the target machine before status is promoted."
+    },
+    {
+      "id": "uim.github",
+      "kind": "connector",
+      "status": "planned",
+      "requires": [
+        "scoped GitHub credentials in the runtime environment",
+        "read-only contract tests before write scopes",
+        "audit logging"
+      ],
+      "description": "GitHub connector for the local UIM runtime. Current ChatGPT GitHub integration does not automatically transfer its credentials to this process."
+    },
+    {
+      "id": "uim.browser",
+      "kind": "connector",
+      "status": "planned",
+      "requires": [
+        "approved browser driver",
+        "allow-listed origins and actions",
+        "observation after each action"
+      ],
+      "description": "Isolated browser automation connector."
+    },
+    {
+      "id": "uim.powershell",
+      "kind": "connector",
+      "status": "planned",
+      "requires": [
+        "Windows PowerShell 5.1-compatible runner",
+        "allow-listed commands",
+        "separate administrative approval",
+        "timeout and cancellation"
+      ],
+      "description": "Scoped Windows task runner; never a general unauthenticated shell endpoint."
+    },
+    {
+      "id": "uim.research",
+      "kind": "capability",
+      "status": "planned",
+      "requires": ["search adapter", "source provenance", "citation verification"],
+      "description": "Evidence-backed research and retrieval."
+    },
+    {
+      "id": "uim.multimodal",
+      "kind": "capability",
+      "status": "planned",
+      "requires": ["one or more configured vision/audio/media adapters"],
+      "description": "Pluggable image, document, audio, and media workflows."
+    },
+    {
+      "id": "uim.approval_broker",
+      "kind": "security",
+      "status": "planned",
+      "requires": ["identity context", "policy rules", "durable approval records"],
+      "description": "Require explicit approvals for external side effects, destructive actions, credential use, publishing, purchases, and privilege changes."
+    },
+    {
+      "id": "uim.evidence_ledger",
+      "kind": "observability",
+      "status": "planned",
+      "requires": ["durable event store", "redaction", "verification hooks"],
+      "description": "Record task state, selected route, tool invocations, approvals, hashes, and verification outcomes."
+    }
+  ]
+}

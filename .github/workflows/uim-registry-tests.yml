@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - "runtime/uim/**"
+      - "runtime/unified_hub/**"
       - ".github/workflows/uim-registry-tests.yml"
   pull_request:
     paths:
@@ -26,5 +27,6 @@ jobs:
         with:
           python-version: "3.12"
       - name: Run all UIM contract tests
-        working-directory: runtime/uim
-        run: python -m unittest discover -v
+        run: |
+          python -m unittest discover -s runtime/uim -v
+          python -m unittest discover -s runtime/unified_hub -v
